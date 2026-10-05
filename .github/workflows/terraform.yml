@@ -18,10 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
-      - run: terraform init -backend-config="key=dev.tfstate"
+      - name: Initialize Terraform
+        id: init
+        run: terraform init -reconfigure -backend-config="key=dev.tfstate"
       - run: terraform apply -auto-approve -var-file=envs/dev.tfvars
       - run: terraform destroy -auto-approve -var-file=envs/dev.tfvars
-        if: always()
+        if: always() && steps.init.outcome == 'success'
       
 
   staging:
@@ -34,10 +36,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
-      - run: terraform init -backend-config="key=staging.tfstate"
+      - name: Initialize Terraform
+        id: init
+        run: terraform init -reconfigure -backend-config="key=staging.tfstate"
       - run: terraform apply -auto-approve -var-file=envs/staging.tfvars
       - run: terraform destroy -auto-approve -var-file=envs/staging.tfvars
-        if: always()
+        if: always() && steps.init.outcome == 'success'
 
   prod:
     needs: staging
@@ -49,7 +53,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
-      - run: terraform init -backend-config="key=prod.tfstate"
+      - name: Initialize Terraform
+        id: init
+        run: terraform init -reconfigure -backend-config="key=prod.tfstate"
       - run: terraform apply -auto-approve -var-file=envs/prod.tfvars
       - run: terraform destroy -auto-approve -var-file=envs/prod.tfvars
-        if: always()
+        if: always() && steps.init.outcome == 'success'
